@@ -1,25 +1,111 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: 'Assignment: Course Project 1'
+output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
-## Loading and preprocessing the data
+## Introduction
 
+It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the "quantified self" movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
 
+This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
 
-## What is mean total number of steps taken per day?
+The data for this assignment can be downloaded from the course web site.
 
+The variables included in this dataset are:
+steps: Number of steps taking in a 5-minute interval (missing values are coded as NA)
+date: The date on which the measurement was taken in YYYY-MM-DD format
+interval: Identifier for the 5-minute interval in which measurement was taken
+The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.
 
+## Project
 
-## What is the average daily activity pattern?
+1. Loading and preprocessing the data: 
 
+```{r movement}
+download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip","raw_data.zip")
+unzip("raw_data.zip")
+movement <- read.csv("~/PwC_2012-2016/course_mine/R programming_2016/reproduciable research/week1/lecture/activity.csv")
+str(movement)
+```
 
+2. Building a histogram of the total number of steps taken each day using a base plotting system in R.
 
-## Imputing missing values
+```{r aggregated}
+aggregated <- aggregate(movement$steps ~ date, data = movement, sum, na.rm=TRUE)
+aggregated_matrix <- t(aggregated[-1])
+colnames(aggregated_matrix) <- aggregated[,1]
+par(mgp=c(5,1,0))
+par(mar=c(7,6,4,2)+0.1)
+plot1 <- barplot(aggregated_matrix, las=2, xlab = "Date", ylab = "Steps", cex=0.8, cex.axis=0.8)
+```
 
+3. Calculating a mean and median number of steps taken each day.
 
+```{r}
+mean_movement_daily <- aggregate(movement[, 1], list(movement$date), mean, na.rm=TRUE)
+mean_movement_daily
+mean_movement_daily[] <- lapply(mean_movement_daily, function(x){ 
+  x[is.nan(x)] <- NA 
+  x 
+})
+mean_movement_daily[is.na(mean_movement_daily)] <- 0
+median_movement_daily <- aggregate(movement[, 1], list(movement$date), median, na.rm=TRUE)
+median_movement_daily
+```
 
-## Are there differences in activity patterns between weekdays and weekends?
+4. Building a time series plot of the average number of steps taken.
+```{r}
+library(plyr)
+renamed_mean_movement <- rename(mean_movement_daily, c("Group.1"="Date", "x"="Average # of Steps"))
+par(mgp=c(5,1,0))
+par(mar=c(7,6,4,2)+0.1)
+plot2 <- plot(renamed_mean_movement, las= 2, cex=0.8, cex.axis=0.8) 
+```
+
+5. Calculating the 5-minute interval that, on average, contains the maximum number of steps.
+```{r}
+max_average <- apply(renamed_mean_movement, MARGIN = 2, function(renamed_mean_movement) max(renamed_mean_movement, na.rm=TRUE))
+max_average
+```
+
+6. Describe and show a strategy for imputing missing data.
+6.1. Check the # of missing values.
+```{r}
+movement2 <- is.na(movement$steps)
+sum(movement2)
+```
+
+6.2 Replace missing values with average values that we identified previously.
+```{r}
+aggregated2 <- aggregate(movement$steps ~ date, data = movement, sum)
+aggregated_matrix2 <- t(aggregated2[-1])
+colnames(aggregated_matrix2) <- aggregated2[,1]
+```
+
+7. Build a histogram of the total number of steps taken each day after missing values are imputed.
+```{r}
+par(mgp=c(5,1,0))
+par(mar=c(7,6,4,2)+0.1)
+plot3 <- barplot(aggregated_matrix2, las=2, xlab = "Date", ylab = "Steps", cex=0.8, cex.axis=0.8)
+```
+
+8. Compare the average number of steps taken per 5-minute interval across weekdays and weekends.
+```{r}
+language <- "English" 
+Sys.setlocale("LC_TIME", language) 
+movement$date <- weekdays(as.Date(movement$date))
+weekday <- movement[movement$date %in% c("Monday","Tuesday", "Wednesday", "Thursday", "Friday"),]
+weekend <- movement[movement$date %in% c("Saturday", "Sunday"),]
+library(ggplot2)
+plot4 <- ggplot(weekday)+geom_line(aes(x=interval, y=steps))
+plot4
+plot5 <- ggplot(weekend)+geom_line(aes(x=interval, y=steps))
+plot5
+require(gridExtra)
+grid.arrange(plot4 + ggtitle("Weekdays"), plot5  + ggtitle("Weekend"), nrow=2)
+```
+
