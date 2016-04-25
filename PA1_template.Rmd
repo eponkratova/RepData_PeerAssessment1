@@ -25,7 +25,7 @@ The dataset is stored in a comma-separated-value (CSV) file and there are a tota
 
 1. Loading and preprocessing the data: 
 
-```{r movement}
+```{r movement, echo=FALSE}
 download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip","raw_data.zip")
 unzip("raw_data.zip")
 movement <- read.csv("~/PwC_2012-2016/course_mine/R programming_2016/reproduciable research/week1/lecture/activity.csv")
@@ -34,7 +34,7 @@ str(movement)
 
 2. Building a histogram of the total number of steps taken each day using a base plotting system in R.
 
-```{r aggregated}
+```{r aggregated, echo=FALSE}
 aggregated <- aggregate(movement$steps ~ date, data = movement, sum, na.rm=TRUE)
 aggregated_matrix <- t(aggregated[-1])
 colnames(aggregated_matrix) <- aggregated[,1]
@@ -58,7 +58,7 @@ median_movement_daily
 ```
 
 4. Building a time series plot of the average number of steps taken.
-```{r}
+```{r, echo=FALSE}
 library(plyr)
 renamed_mean_movement <- rename(mean_movement_daily, c("Group.1"="Date", "x"="Average # of Steps"))
 par(mgp=c(5,1,0))
@@ -87,14 +87,14 @@ colnames(aggregated_matrix2) <- aggregated2[,1]
 ```
 
 7. Build a histogram of the total number of steps taken each day after missing values are imputed.
-```{r}
+```{r, echo=FALSE}
 par(mgp=c(5,1,0))
 par(mar=c(7,6,4,2)+0.1)
 plot3 <- barplot(aggregated_matrix2, las=2, xlab = "Date", ylab = "Steps", cex=0.8, cex.axis=0.8)
 ```
 
 8. Compare the average number of steps taken per 5-minute interval across weekdays and weekends.
-```{r}
+```{r, echo=FALSE}
 language <- "English" 
 Sys.setlocale("LC_TIME", language) 
 movement$date <- weekdays(as.Date(movement$date))
